@@ -42,6 +42,7 @@ import org.springframework.jdbc.support.MetaDataAccessException;
 import org.springframework.jdbc.support.lob.DefaultLobHandler;
 import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.session.FlushMode;
@@ -294,6 +295,14 @@ public class JdbcHttpSessionConfiguration extends SpringHttpSessionConfiguration
 		public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
 			taskRegistrar.addCronTask(this.sessionRepository::cleanUpExpiredSessions,
 					JdbcHttpSessionConfiguration.this.cleanupCron);
+		}
+
+		@Scheduled(cron = "${spring.session.jdbc.cleanup-cron-task:0 * * * * *}")
+		protected void cleanupSpringSession() {
+			String cleanFlag = System.getProperty("spring.session.jdbc.cleanup-flag");
+			if (Boolean.parseBoolean(cleanFlag)) {
+				this.sessionRepository.cleanUpExpiredSessions();
+			}
 		}
 
 	}
